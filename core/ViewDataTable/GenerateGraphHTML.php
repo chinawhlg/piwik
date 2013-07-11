@@ -18,7 +18,6 @@
  */
 abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
 {
-
     protected $width = '100%';
     protected $height = 250;
     protected $graphType = 'unknown';
@@ -31,6 +30,72 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
      */
     protected $generateGraphDataParams = array();
 
+    public function setAxisYUnit($unit)
+    {
+        $this->viewProperties['y_axis_unit'] = $unit;
+    }
+
+    /**
+     * Sets the number max of elements to display (number of pie slice, vertical bars, etc.)
+     * If the data has more elements than $limit then the last part of the data will be the sum of all the remaining data.
+     *
+     * @param int $limit
+     */
+    public function setGraphLimit($limit)
+    {
+        $this->viewProperties['graph_limit'] = $limit;
+    }
+
+    /**
+     * Returns numbers of elemnts to display in the graph
+     *
+     * @return int
+     */
+    public function getGraphLimit()
+    {
+        return $this->viewProperties['graph_limit'];
+    }
+
+    /**
+     * The percentage in tooltips is computed based on the sum of all values for the plotted column.
+     * If the sum of the column in the data set is not the number of elements in the data set,
+     * for example when plotting visits that have a given plugin enabled:
+     * one visit can have several plugins, hence the sum is much greater than the number of visits.
+     * In this case displaying the percentage doesn't make sense.
+     */
+    public function disallowPercentageInGraphTooltip()
+    {
+        $this->viewProperties['display_percentage_in_tooltip'] = false;
+    }
+
+    /**
+     * Sets the columns that can be added/removed by the user
+     * This is done on data level (not html level) because the columns might change after reloading via sparklines
+     * @param array $columnsNames Array of column names eg. array('nb_visits','nb_hits')
+     */
+    public function setSelectableColumns($columnsNames)
+    {
+        // the array contains values if enableShowGoals() has been used
+        // add $columnsNames to the beginning of the array
+        $this->viewProperties['selectable_columns'] = array_merge($columnsNames, $this->viewProperties['selectable_columns']);
+    }
+
+    /**
+     * The implementation of this method in Piwik_ViewDataTable passes to the graph whether the
+     * goals icon should be displayed or not. Here, we use it to implicitly add the goal metrics
+     * to the metrics picker.
+     */
+    public function enableShowGoals()
+    {
+        parent::enableShowGoals();
+
+        $goalMetrics = array('nb_conversions', 'revenue');
+        $this->viewProperties['selectable_columns'] = array_merge($this->viewProperties['selectable_columns'], $goalMetrics);
+
+        $this->setColumnTranslation('nb_conversions', Piwik_Translate('Goals_ColumnConversions'));
+        $this->setColumnTranslation('revenue', Piwik_Translate('General_TotalRevenue'));
+    }
+
     /**
      * @see Piwik_ViewDataTable::init()
      * @param string $currentControllerName
@@ -38,7 +103,7 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
      * @param string $apiMethodToRequestDataTable
      * @param null $controllerActionCalledWhenRequestSubTable
      */
-    function init($currentControllerName,
+    public function init($currentControllerName,
                   $currentControllerAction,
                   $apiMethodToRequestDataTable,
                   $controllerActionCalledWhenRequestSubTable = null)
@@ -63,6 +128,8 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
             'module'        => $currentControllerName,
             'action'        => $currentControllerAction,
         );
+        
+        $this->viewProperties['selectable_columns'] = array();
     }
 
     public function enableShowExportAsImageIcon()
@@ -130,6 +197,18 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         }
         $this->mainAlreadyExecuted = true;
 
+        // Graphs require the full dataset, so no filters
+        $this->disableGenericFilters();
+        
+        // the queued filters will be manually applied later. This is to ensure that filtering using search
+        // will be done on the table before the labels are enhanced (see ReplaceColumnNames)
+        $this->disableQueuedFilters();
+
+        // throws exception if no view access
+        $this->loadDataTableFromAPI();
+        $this->checkStandardDataTable();
+        $this->postDataTableLoadedFromAPI();
+        
         $this->view = $this->buildView();
     }
 
@@ -145,7 +224,7 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         // collect data
         $this->parametersToModify['action'] = $this->currentControllerAction;
         $this->parametersToModify = array_merge($this->variablesDefault, $this->parametersToModify);
-        $this->graphData = $this->getGraphData();
+        $this->graphData = $this->getGraphData($this->dataTable);
 
         // build view
         $view = new Piwik_View($this->dataTableTemplate);
@@ -170,27 +249,12 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         return $view;
     }
 
-    protected function getGraphData()
+    protected function getGraphData($dataTable)
     {
-        $saveGet = $_GET;
-
-        $params = array_merge($this->generateGraphDataParams, $this->parametersToModify);
-        foreach ($params as $key => $val) {
-            // We do not forward filter data to the graph controller.
-            // This would cause the graph to have filter_limit=5 set by default,
-            // which would break them (graphs need the full dataset to build the "Others" aggregate value)
-            if (strpos($key, 'filter_') !== false) {
-                continue;
-            }
-            if (is_array($val)) {
-                $val = implode(',', $val);
-            }
-            $_GET[$key] = $val;
-        }
-        $content = Piwik_FrontController::getInstance()->fetchDispatch($this->currentControllerName, $this->currentControllerAction, array());
-
-        $_GET = $saveGet;
-
-        return str_replace(array("\r", "\n"), '', $content);
+        $dataGenerator = JqplotDataGenerator::factory($this->graphType); // TODO
+        $dataGenerator->setProperties(array_merge($this->viewProperties, $this->parametersToModify, $this->generateGraphDataparams));
+        
+        $jsonData = $dataGenerator->generate($dataTable);
+        return str_replace(array("\r", "\n"), '', $jsonData);
     }
 }
