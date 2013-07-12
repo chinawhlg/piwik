@@ -213,6 +213,7 @@ abstract class Piwik_ViewDataTable
      * If force is set to true, a ViewDataTable of the $defaultType will be returned in all cases.
      *
      * @param string $defaultType Any of these: table, cloud, graphPie, graphVerticalBar, graphEvolution, sparkline, generateDataChart*
+     * @param string|bool $action
      * @return Piwik_ViewDataTable
      */
     static public function factory($defaultType = null, $action = false)
@@ -346,6 +347,7 @@ abstract class Piwik_ViewDataTable
      * @param string $currentControllerAction eg. 'getKeywords'
      * @param string $apiMethodToRequestDataTable eg. 'Referers.getKeywords'
      * @param string $controllerActionCalledWhenRequestSubTable eg. 'getSearchEnginesFromKeywordId'
+     * @param array  $defaultProperties
      */
     public function init($currentControllerName,
                          $currentControllerAction,
@@ -467,10 +469,11 @@ abstract class Piwik_ViewDataTable
 
     /**
      * Returns the defaut view properties for a report, if any.
-     * 
+     *
      * Plugins can associate callbacks with the ViewDataTable.getReportDisplayProperties
      * event to set the default properties of reports.
-     * 
+     *
+     * @param string $apiAction
      * @return array
      */
     private static function getDefaultPropertiesForReport($apiAction)
