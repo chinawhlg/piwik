@@ -811,7 +811,7 @@ abstract class Piwik_ViewDataTable
                 $javascriptVariablesToSet[$name] = $this->viewProperties[$name];
             }
         }
-        
+
         foreach ($this->viewProperties['custom_parameters'] as $name => $value) {
             $javascriptVariablesToSet[$name] = $value;
         }

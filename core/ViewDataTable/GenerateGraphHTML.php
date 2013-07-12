@@ -236,6 +236,10 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->checkStandardDataTable();
         $this->postDataTableLoadedFromAPI();
         
+        // re-enable generic & queued filters so they do not appear in JS output
+        $this->viewProperties['disable_generic_filters'] = false;
+        $this->viewProperties['disable_queued_filters'] = false;
+        
         $this->view = $this->buildView();
     }
     
