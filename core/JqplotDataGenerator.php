@@ -171,7 +171,7 @@ class Piwik_JqplotDataGenerator
             foreach ($this->properties['selectable_columns'] as $column) {
                 $selectableColumns[] = array(
                     'column'      => $column,
-                    'translation' => @$properties->translations[$column],
+                    'translation' => @$this->properties['translations'][$column],
                     'displayed'   => in_array($column, $this->properties['columns_to_display'])
                 );
             }
