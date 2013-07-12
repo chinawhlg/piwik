@@ -83,6 +83,8 @@ class Piwik_JqplotDataGenerator
         }
         
         $this->visualization->customizeChartProperties();
+        
+        return $this->visualization->render();
     }
 
     protected function initChartObjectData($dataTable)
@@ -106,7 +108,7 @@ class Piwik_JqplotDataGenerator
             $columnNameToValue[$columnName] = $dataTable->getColumn($columnName);
         }
         
-        $visualiztion = $this->visualization;
+        $visualization = $this->visualization;
         $visualization->setAxisXLabels($xLabels);
         $visualization->setAxisYValues($columnNameToValue);
         $visualization->setAxisYLabels($columnNameToTranslation);

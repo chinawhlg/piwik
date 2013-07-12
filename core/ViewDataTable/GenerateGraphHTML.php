@@ -20,9 +20,22 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
 {
     protected $width = '100%';
     protected $height = 250;
+    protected $graphType; // TODO
 
     public function __construct($graphType)
     {
+        parent::__construct();
+        
+        $this->dataTableTemplate = '@CoreHome/_dataTableGraph';
+        $this->disableOffsetInformationAndPaginationControls();
+        $this->disableExcludeLowPopulation();
+        $this->disableSearchBox();
+        $this->enableShowExportAsImageIcon();
+        
+        // TODO: necessary?
+        //$labelIdx = array_search('label', $this->viewProperties['columns_to_display']);
+        //unset($this->viewProperties[$labelIdx]);
+        
         $this->viewProperties['display_percentage_in_tooltip'] = true;
         $this->viewProperties['y_axis_unit'] = '';
         $this->viewProperties['show_all_ticks'] = 0;
@@ -93,21 +106,6 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->setColumnTranslation('nb_conversions', Piwik_Translate('Goals_ColumnConversions'));
         $this->setColumnTranslation('revenue', Piwik_Translate('General_TotalRevenue'));
     }
-
-    public function __construct()
-    {
-        parent::__construct();
-        
-        $this->dataTableTemplate = '@CoreHome/_dataTableGraph';
-        $this->disableOffsetInformationAndPaginationControls();
-        $this->disableExcludeLowPopulation();
-        $this->disableSearchBox();
-        $this->enableShowExportAsImageIcon();
-        
-        // TODO: necessary?
-        //$labelIdx = array_search('label', $this->viewProperties['columns_to_display']);
-        //unset($this->viewProperties[$labelIdx]);
-    }
     
     public function init($currentControllerName,
                          $currentControllerAction,
@@ -129,6 +127,8 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         
         // do not sort if sorted column was initially "label" or eg. it would make "Visits by Server time" not pretty
         if ($this->getSortedColumn() != 'label') {
+            $columns = $this->viewProperties['columns_to_display'];
+            
             $firstColumn = reset($columns);
             if ($firstColumn == 'label') {
                 $firstColumn = next($columns);
@@ -297,7 +297,7 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
     protected function getGraphData($dataTable)
     {
         $properties = array_merge($this->viewProperties, $this->parametersToModify);
-        $dataGenerator = JqplotDataGenerator::factory($this->graphType, $properties);
+        $dataGenerator = Piwik_JqplotDataGenerator::factory($this->graphType, $properties);
         
         $jsonData = $dataGenerator->generate($dataTable);
         return str_replace(array("\r", "\n"), '', $jsonData);

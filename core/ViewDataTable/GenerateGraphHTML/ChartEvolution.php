@@ -19,7 +19,6 @@
 class Piwik_ViewDataTable_GenerateGraphHTML_ChartEvolution extends Piwik_ViewDataTable_GenerateGraphHTML
 {
     protected $height = 170;
-    protected $graphType = 'evolution';
 
     /**
      * The value of the date query parameter (or a default value) before it is turned
