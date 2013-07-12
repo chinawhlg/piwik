@@ -20,7 +20,20 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
 {
     protected $width = '100%';
     protected $height = 250;
-    protected $graphType = 'unknown';
+
+    public function __construct($graphType)
+    {
+        $this->viewProperties['display_percentage_in_tooltip'] = true;
+        $this->viewProperties['y_axis_unit'] = '';
+        $this->viewProperties['show_all_ticks'] = 0;
+        $this->viewProperties['add_total_row'] = 0;
+        $this->viewProperties['graph_limit'] = null;
+        $this->viewProperties['allow_multi_select_series_picker'] = true;
+        $this->viewProperties['row_picker_mach_rows_by'] = false;
+        $this->viewProperties['row_picker_visible_rows'] = array();
+        
+        $this->graphType = $graphType;
+    }
 
     /**
      * Default constructor.
@@ -39,16 +52,6 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
     public function setGraphLimit($limit)
     {
         $this->viewProperties['graph_limit'] = $limit;
-    }
-
-    /**
-     * Returns numbers of elemnts to display in the graph
-     *
-     * @return int
-     */
-    public function getGraphLimit()
-    {
-        return $this->viewProperties['graph_limit'];
     }
 
     /**
@@ -100,6 +103,10 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->disableExcludeLowPopulation();
         $this->disableSearchBox();
         $this->enableShowExportAsImageIcon();
+        
+        // TODO: necessary?
+        //$labelIdx = array_search('label', $this->viewProperties['columns_to_display']);
+        //unset($this->viewProperties[$labelIdx]);
     }
     
     public function init($currentControllerName,
@@ -120,7 +127,22 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
             'action'        => $currentControllerAction,
         );
         
-        $this->viewProperties['selectable_columns'] = array();
+        // do not sort if sorted column was initially "label" or eg. it would make "Visits by Server time" not pretty
+        if ($this->getSortedColumn() != 'label') {
+            $firstColumn = reset($columns);
+            if ($firstColumn == 'label') {
+                $firstColumn = next($columns);
+            }
+            
+            $this->setSortedColumn($firstColumn);
+        }
+        
+        // selectable columns
+        $selectableColumns = array('nb_visits', 'nb_actions');
+        if (Piwik_Common::getRequestVar('period', false) == 'day') {
+            $selectableColumns[] = 'nb_uniq_visitors';
+        }
+        $this->viewProperties['selectable_columns'] = $selectableColumns;
     }
 
     public function enableShowExportAsImageIcon()
@@ -142,17 +164,6 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
     {
         $this->parametersToModify = array_merge($this->parametersToModify, $array);
     }
-    
-    /**
-     * Returns the names of the view properties to send to GenerateGraphData instance.
-     * Properties are passed via the $_GET array.
-     * 
-     * @return array
-     */
-    public function getViewPropertiesToForward()
-    {
-        return array('show_all_ticks', 'add_total_row');
-    }
 
     /**
      * Show every x-axis tick instead of just every other one.
@@ -169,6 +180,20 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
     public function addTotalRow()
     {
         $this->viewProperties['add_total_row'] = 1;
+    }
+
+    /**
+     * Adds the same series picker as parent::setSelectableColumns but the selectable series are not
+     * columns of a single row but the same column across multiple rows, e.g. the number of visits
+     * for each referrer type.
+     * @param array $visibleRows the rows that are initially visible
+     * @param string $matchBy the way the items in $visibleRows are matched with the data. possible values:
+     *                            - label: matches the label of the row
+     */
+    public function addRowPicker($visibleRows, $matchBy = 'label')
+    {
+        $this->viewProperties['row_picker_mach_rows_by'] = $matchBy;
+        $this->viewProperties['row_picker_visible_rows'] = is_array($visibleRows) ? $visibleRows : array($visibleRows);
     }
 
     /**
@@ -212,6 +237,20 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->postDataTableLoadedFromAPI();
         
         $this->view = $this->buildView();
+    }
+    
+    protected function getRequestString()
+    {
+        $requestString = parent::getRequestString();
+        
+        // period will be overridden when 'range' is requested in the UI
+        // but the graph will display for each day of the range.
+        // Default 'range' behavior is to return the 'sum' for the range
+        if ($this->graphType == 'evolution') {
+            $requestString .= '&period=day';
+        }
+        
+        return $requestString;
     }
 
     protected function buildView()
@@ -257,21 +296,10 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
 
     protected function getGraphData($dataTable)
     {
-        $dataGenerator = JqplotDataGenerator::factory($this->graphType); // TODO
-        $dataGenerator->setProperties(array_merge($this->viewProperties, $this->parametersToModify, $this->generateGraphDataparams));
+        $properties = array_merge($this->viewProperties, $this->parametersToModify);
+        $dataGenerator = JqplotDataGenerator::factory($this->graphType, $properties);
         
         $jsonData = $dataGenerator->generate($dataTable);
         return str_replace(array("\r", "\n"), '', $jsonData);
-    }
-    
-    private function getGenerateGraphDataParams()
-    {
-        $result = array();
-        foreach ($this->getViewPropertiesToForward() as $name) {
-            if (isset($this->viewProperties[$name])) {
-                $result[$name] = $this->viewProperties[$name];
-            }
-        }
-        return $result;
     }
 }

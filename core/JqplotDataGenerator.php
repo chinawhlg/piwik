@@ -17,20 +17,32 @@ class Piwik_JqplotDataGenerator
     /**
      * TODO
      */
-    private $properties;
+    protected $properties;
     
     /**
      * TODO
      */
-    public static function factory($type)
+    protected $visualization;
+    
+    /**
+     * TODO
+     */
+    public static function factory($type, $properties)
     {
-        switch ($type) {
+        switch ($type) { // TODO: move to private functions
             case 'evolution':
-                return new Piwik_JqplotDataGenerator_Evolution();
+                return new Piwik_JqplotDataGenerator_Evolution($properties);
             case 'pie':
-                return new Piwik_JqplotDataGenerator_Pie();
+                $visualization = new Piwik_Visualization_Chart_Pie();
+                $generator = new Piwik_JqplotDataGenerator($visualization, $properties);
+                $generator->properties['graph_limit'] = 6;
+                $generator->properties['allow_multi_select_series_picker'] = false;
+                return $generator;
             case 'bar':
-                return new Piwik_JqplotDataGenerator_VerticalBar();
+                $visualization = new Piwik_Visualization_Chart_VerticalBar();
+                $generator = new Piwik_JqplotDataGenerator($visualization, $properties);
+                $generator->properties['graph_limit'] = 6;
+                return $generator;
             default:
                 throw new Exception("Unknown JqplotDataGenerator type '$type'.");
         }
@@ -39,8 +51,9 @@ class Piwik_JqplotDataGenerator
     /**
      * TODO
      */
-    public function setProperties($properties)
+    public function __construct($visualization, $properties)
     {
+        $this->visualization = $visualization;
         $this->properties = $properties;
     }
     
@@ -66,9 +79,10 @@ class Piwik_JqplotDataGenerator
                 $dataTable->queueFilter('AddSummaryRow', array(0, Piwik_Translate('General_Total'), null, false));
             }
             
-            $this->initChartObjectData($dataTable); // TODO
+            $this->initChartObjectData($dataTable);
         }
-        $this->view->customizeChartProperties(); // TODO
+        
+        $this->visualization->customizeChartProperties();
     }
 
     protected function initChartObjectData($dataTable)
@@ -79,30 +93,89 @@ class Piwik_JqplotDataGenerator
         $dataTable->filter('ColumnCallbackReplace', array('label', 'urldecode'));
 
         $xLabels = $dataTable->getColumn('label');
-        $columnNames = parent::getColumnsToDisplay();
-        if (($labelColumnFound = array_search('label', $columnNames)) !== false) {
-            unset($columnNames[$labelColumnFound]);
+        
+        $columnNames = $this->properties['columns_to_display'];
+        if (($labelColumnIndex = array_search('label', $columnNames)) !== false) {
+            unset($columnNames[$labelColumnIndex]);
         }
 
         $columnNameToTranslation = $columnNameToValue = array();
         foreach ($columnNames as $columnName) {
-            $columnNameToTranslation[$columnName] = $this->getColumnTranslation($columnName);
-            $columnNameToValue[$columnName] = $this->dataTable->getColumn($columnName);
+            $columnNameToTranslation[$columnName] = @$this->properties['translations'][$columnName];
+            
+            $columnNameToValue[$columnName] = $dataTable->getColumn($columnName);
         }
-        $this->view->setAxisXLabels($xLabels);
-        $this->view->setAxisYValues($columnNameToValue);
-        $this->view->setAxisYLabels($columnNameToTranslation);
-        $this->view->setAxisYUnit($this->yAxisUnit);
-        $this->view->setDisplayPercentageInTooltip($this->displayPercentageInTooltip);
+        
+        $visualiztion = $this->visualization;
+        $visualization->setAxisXLabels($xLabels);
+        $visualization->setAxisYValues($columnNameToValue);
+        $visualization->setAxisYLabels($columnNameToTranslation);
+        $visualization->setAxisYUnit($this->properties['y_axis_unit']);
+        $visualization->setDisplayPercentageInTooltip($this->properties['display_percentage_in_tooltip']);
 
         // show_all_ticks is not real query param, it is set by GenerateGraphHTML.
-        if (Piwik_Common::getRequestVar('show_all_ticks', 0) == 1) {
-            $this->view->showAllTicks();
+        if ($this->properties['show_all_ticks']) {
+            $visualization->showAllTicks();
         }
 
         $units = $this->getUnitsForColumnsToDisplay();
-        $this->view->setAxisYUnits($units);
+        $visualization->setAxisYUnits($units);
 
         $this->addSeriesPickerToView();
+    }
+
+    protected function getUnitsForColumnsToDisplay()
+    {
+        // derive units from column names
+        $units = $this->deriveUnitsFromRequestedColumnNames();
+        if (!empty($this->properties['y_axis_unit'])) {
+            // force unit to the value set via $this->setAxisYUnit()
+            foreach ($units as &$unit) {
+                $unit = $this->properties['y_axis_unit'];
+            }
+        }
+        
+        // the bar charts contain the labels a first series
+        // this series has to be removed from the units
+        if ($this->visualization instanceof Piwik_Visualization_Chart_VerticalBar) {
+            array_shift($units);
+        }
+        
+        return $units;
+    }
+
+    private function deriveUnitsFromRequestedColumnNames()
+    {
+        $idSite = Piwik_Common::getRequestVar('idSite', null, 'int');
+        
+        $units = array();
+        foreach ($this->properties['columns_to_display'] as $columnName) {
+            $derivedUnit = Piwik_Metrics::getUnit($columnName, $idSite);
+            $units[$columnName] = empty($derivedUnit) ? false : $derivedUnit;
+        }
+        return $units;
+    }
+
+    /**
+     * Used in initChartObjectData to add the series picker config to the view object
+     * @param bool $multiSelect
+     */
+    private function addSeriesPickerToView()
+    {
+        if (count($this->properties['selectable_columns'])
+            && Piwik_Common::getRequestVar('showSeriesPicker', 1) == 1
+        ) {
+            $selectableColumns = array();
+            foreach ($this->properties['selectable_columns'] as $column) {
+                $selectableColumns[] = array(
+                    'column'      => $column,
+                    'translation' => @$properties->translations[$column],
+                    'displayed'   => in_array($column, $this->properties['columns_to_display'])
+                );
+            }
+            
+            $this->visualization->setSelectableColumns(
+                $selectableColumns, $this->properties['allow_multi_select_series_picker']);
+        }
     }
 }
