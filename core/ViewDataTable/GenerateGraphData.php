@@ -31,6 +31,52 @@
  */
 abstract class Piwik_ViewDataTable_GenerateGraphData extends Piwik_ViewDataTable
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->viewProperties['graph_limit'] = null;
+        
+        $labelIdx = array_search('label', $this->viewProperties['columns_to_display']);
+        unset($this->viewProperties[$labelIdx]);
+    }
+    
+    public function init($currentControllerName,
+                           $currentControllerAction,
+                           $apiMethodToRequestDataTable,
+                           $controllerActionCalledWhenRequestSubTable = null,
+                           $defaultProperties = array())
+    {
+        parent::init($currentControllerName,
+                     $currentControllerAction,
+                     $apiMethodToRequestDataTable,
+                     $controllerActionCalledWhenRequestSubTable,
+                     $defaultProperties);
+        
+        $columns = Piwik_Common::getRequestVar('columns', false);
+        if ($columns !== false) {
+            $columns = Piwik::getArrayFromApiParameter($columns);
+        } else {
+            $columns = $this->viewProperties['columns_to_display'];
+        }
+        
+        // do not sort if sorted column was initially "label" or eg. it would make "Visits by Server time" not pretty
+        if ($this->getSortedColumn() != 'label') {
+            $firstColumn = reset($columns);
+            if ($firstColumn == 'label') {
+                $firstColumn = next($columns);
+            }
+            
+            $this->setSortedColumn($firstColumn);
+        }
+        
+        // selectable columns
+        $selectableColumns = array('nb_visits', 'nb_actions');
+        if (Piwik_Common::getRequestVar('period', false) == 'day') {
+            $selectableColumns[] = 'nb_uniq_visitors';
+        }
+        
+        $this->setSelectableColumns($selectableColumns);
+    }
 
     /**
      * Used in initChartObjectData to add the series picker config to the view object
