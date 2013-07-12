@@ -138,11 +138,13 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         }
         
         // selectable columns
-        $selectableColumns = array('nb_visits', 'nb_actions');
-        if (Piwik_Common::getRequestVar('period', false) == 'day') {
-            $selectableColumns[] = 'nb_uniq_visitors';
+        if ($this->graphType != 'evolution') {
+            $selectableColumns = array('nb_visits', 'nb_actions');
+            if (Piwik_Common::getRequestVar('period', false) == 'day') {
+                $selectableColumns[] = 'nb_uniq_visitors';
+            }
+            $this->viewProperties['selectable_columns'] = $selectableColumns;
         }
-        $this->viewProperties['selectable_columns'] = $selectableColumns;
     }
 
     public function enableShowExportAsImageIcon()
