@@ -249,8 +249,8 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
     }
     
     protected function getRequestString()
-    {
-        $requestString = parent::getRequestString();
+    {        
+        $parametersToModify = $this->parametersToModify;
         
         // period will be overridden when 'range' is requested in the UI
         // but the graph will display for each day of the range.
@@ -258,10 +258,10 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         if ($this->graphType == 'evolution'
             && Piwik_Common::getRequestVar('period', false) == 'range'
         ) {
-            $requestString .= '&period=day';
+            $parametersToModify['period'] = 'day';
         }
-        
-        return $requestString;
+
+        return parent::getRequestString($parametersToModify);
     }
 
     protected function buildView()

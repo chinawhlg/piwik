@@ -667,7 +667,7 @@ abstract class Piwik_ViewDataTable
     /**
      * @return string URL to call the API, eg. "method=Referers.getKeywords&period=day&date=yesterday"...
      */
-    protected function getRequestString()
+    protected function getRequestString($parametersToModify = array()) // TODO: should return an array not a string
     {
         // we prepare the string to give to the API Request
         // we setup the method and format variable
@@ -699,6 +699,16 @@ abstract class Piwik_ViewDataTable
                 } else {
                     $requestString .= '&' . $varToSet . '=' . $value;
                 }
+            }
+        }
+        
+        foreach ($parametersToModify as $name => $value) {
+            if (is_array($value)) {// TODO: code redundancy w/ above
+                foreach ($value as $v) {
+                    $requestString .= "&" . $name . '[]=' . $v;
+                }
+            } else {
+                $requestString .= '&' . $name . '=' . $value;
             }
         }
 
