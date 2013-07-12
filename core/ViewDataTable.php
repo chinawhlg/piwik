@@ -176,14 +176,17 @@ abstract class Piwik_ViewDataTable
 
         $this->viewProperties['columns_to_display'][] = 'label';
         
+        // TODO: test DBStats and others
         $columns = Piwik_Common::getRequestVar('columns', false);
         if ($columns !== false) {
             $this->viewProperties['columns_to_display'] = array_merge(
                 $this->viewProperties['columns_to_display'], Piwik::getArrayFromApiParameter($columns));
-        } else if (Piwik_Common::getRequestVar('period', false) == 'day') {
-            $this->viewProperties['columns_to_display'][] = 'nb_uniq_visitors';
         } else {
-            $this->viewProperties['columns_to_display'][] = 'nb_visits';
+            if (Piwik_Common::getRequestVar('period', false) == 'day') {
+                $this->viewProperties['columns_to_display'][] = 'nb_uniq_visitors';
+            } else {
+                $this->viewProperties['columns_to_display'][] = 'nb_visits';
+            }
         }
     }
 
