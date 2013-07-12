@@ -44,6 +44,7 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->viewProperties['allow_multi_select_series_picker'] = true;
         $this->viewProperties['row_picker_mach_rows_by'] = false;
         $this->viewProperties['row_picker_visible_rows'] = array();
+        $this->viewProperties['selectable_columns'] = array();
         
         $this->graphType = $graphType;
     }
