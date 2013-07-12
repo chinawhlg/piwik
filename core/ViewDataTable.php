@@ -806,6 +806,10 @@ abstract class Piwik_ViewDataTable
                 }
             }
         }
+        
+        foreach ($this->viewProperties['custom_parameters'] as $name => $value) {
+            $javascriptVariablesToSet[$name] = $value;
+        }
 
         foreach ($_GET as $name => $value) {
             try {
@@ -826,10 +830,6 @@ abstract class Piwik_ViewDataTable
             ) {
                 $javascriptVariablesToSet[$name] = $this->viewProperties[$name];
             }
-        }
-
-        foreach ($this->viewProperties['custom_parameters'] as $name => $value) {
-            $javascriptVariablesToSet[$name] = $value;
         }
 
         if ($this->dataTable instanceof Piwik_DataTable) {
