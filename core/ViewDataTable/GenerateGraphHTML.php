@@ -32,9 +32,8 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->disableSearchBox();
         $this->enableShowExportAsImageIcon();
         
-        // TODO: necessary?
-        //$labelIdx = array_search('label', $this->viewProperties['columns_to_display']);
-        //unset($this->viewProperties[$labelIdx]);
+        // TODO: dbstats pie chart not sorted correctly
+        // TODO: Unique visitors in column for tracker tables (setMetricsView crap is used on it).
         
         $this->viewProperties['display_percentage_in_tooltip'] = true;
         $this->viewProperties['y_axis_unit'] = '';
