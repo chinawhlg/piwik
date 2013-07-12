@@ -28,6 +28,12 @@ class Piwik_ViewDataTable_GenerateGraphHTML_ChartEvolution extends Piwik_ViewDat
      * @var string
      */
     private $originalDate;
+    
+    public function __construct()
+    {
+        parent::__construct();
+        $this->graphType = 'evolution';
+    }
 
     protected function getViewDataTableId()
     {

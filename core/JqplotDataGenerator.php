@@ -35,13 +35,10 @@ class Piwik_JqplotDataGenerator
             case 'pie':
                 $visualization = new Piwik_Visualization_Chart_Pie();
                 $generator = new Piwik_JqplotDataGenerator($visualization, $properties);
-                $generator->properties['graph_limit'] = 6;
-                $generator->properties['allow_multi_select_series_picker'] = false;
                 return $generator;
             case 'bar':
                 $visualization = new Piwik_Visualization_Chart_VerticalBar();
                 $generator = new Piwik_JqplotDataGenerator($visualization, $properties);
-                $generator->properties['graph_limit'] = 6;
                 return $generator;
             default:
                 throw new Exception("Unknown JqplotDataGenerator type '$type'.");

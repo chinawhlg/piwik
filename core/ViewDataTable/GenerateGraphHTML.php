@@ -20,9 +20,9 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
 {
     protected $width = '100%';
     protected $height = 250;
-    protected $graphType; // TODO
+    protected $graphType;
 
-    public function __construct($graphType)
+    public function __construct()
     {
         parent::__construct();
         
@@ -45,8 +45,6 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->viewProperties['row_picker_mach_rows_by'] = false;
         $this->viewProperties['row_picker_visible_rows'] = array();
         $this->viewProperties['selectable_columns'] = array();
-        
-        $this->graphType = $graphType;
     }
 
     /**
