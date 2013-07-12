@@ -233,7 +233,9 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
 
         // throws exception if no view access
         $this->loadDataTableFromAPI();
-        $this->checkStandardDataTable();
+        if ($this->graphType != 'evolution') {
+            $this->checkStandardDataTable();
+        }
         $this->postDataTableLoadedFromAPI();
         
         // re-enable generic & queued filters so they do not appear in JS output

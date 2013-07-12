@@ -12,7 +12,7 @@
 /**
  * TODO
  */
-class Piwik_JqplotDataGenerator_Evolution
+class Piwik_JqplotDataGenerator_Evolution extends Piwik_JqplotDataGenerator
 {
     /**
      * TODO

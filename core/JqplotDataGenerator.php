@@ -162,7 +162,7 @@ class Piwik_JqplotDataGenerator
      * Used in initChartObjectData to add the series picker config to the view object
      * @param bool $multiSelect
      */
-    private function addSeriesPickerToView()
+    protected function addSeriesPickerToView()
     {
         if (count($this->properties['selectable_columns'])
             && Piwik_Common::getRequestVar('showSeriesPicker', 1) == 1
