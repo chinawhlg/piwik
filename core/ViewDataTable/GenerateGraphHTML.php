@@ -255,7 +255,9 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         // period will be overridden when 'range' is requested in the UI
         // but the graph will display for each day of the range.
         // Default 'range' behavior is to return the 'sum' for the range
-        if ($this->graphType == 'evolution') {
+        if ($this->graphType == 'evolution'
+            && Piwik_Common::getRequestVar('period', false) == 'range'
+        ) {
             $requestString .= '&period=day';
         }
         
