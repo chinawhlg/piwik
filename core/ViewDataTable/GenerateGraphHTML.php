@@ -32,8 +32,6 @@ abstract class Piwik_ViewDataTable_GenerateGraphHTML extends Piwik_ViewDataTable
         $this->disableSearchBox();
         $this->enableShowExportAsImageIcon();
         
-        // TODO: dbstats pie chart not sorted correctly
-        
         $this->viewProperties['display_percentage_in_tooltip'] = true;
         $this->viewProperties['y_axis_unit'] = '';
         $this->viewProperties['show_all_ticks'] = 0;
