@@ -10,17 +10,14 @@
  */
 
 /**
- * TODO
+ * Generates JQPlot JSON data/config for evolution graphs.
  */
 class Piwik_JqplotDataGenerator_Evolution extends Piwik_JqplotDataGenerator
 {
-    /**
-     * TODO
-     */
     protected $rowPickerConfig = array();
     
     /**
-     * TODO
+     * Constructor.
      */
     public function __construct($properties)
     {
