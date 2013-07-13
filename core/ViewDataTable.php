@@ -229,15 +229,15 @@ abstract class Piwik_ViewDataTable
                 break;
 
             case 'graphPie':
-                $result = new Piwik_ViewDataTable_GenerateGraphHTML_ChartPie($graphType = 'pie');
+                $result = new Piwik_ViewDataTable_GenerateGraphHTML_ChartPie();
                 break;
 
             case 'graphVerticalBar':
-                $result = new Piwik_ViewDataTable_GenerateGraphHTML_ChartVerticalBar($graphType = 'bar');
+                $result = new Piwik_ViewDataTable_GenerateGraphHTML_ChartVerticalBar();
                 break;
 
             case 'graphEvolution':
-                $result = new Piwik_ViewDataTable_GenerateGraphHTML_ChartEvolution($graphType = 'evolution');
+                $result = new Piwik_ViewDataTable_GenerateGraphHTML_ChartEvolution();
                 break;
 
             case 'sparkline':
