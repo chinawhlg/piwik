@@ -10,43 +10,54 @@
  */
 
 /**
- * TODO
+ * Generates JSON data used to configure and populate JQPlot graphs.
+ * 
+ * Supports pie graphs, bar graphs and time serieses (aka, evolution graphs).
  */
 class Piwik_JqplotDataGenerator
 {
     /**
-     * TODO
+     * View properties. @see Piwik_ViewDataTable for more info.
+     * 
+     * @var array
      */
     protected $properties;
     
     /**
-     * TODO
+     * This object does most of the work in generating the JQPlot JSON data.
+     * 
+     * @var Piwik_Visualization
      */
     protected $visualization;
     
     /**
-     * TODO
+     * Creates a new JqplotDataGenerator instance for a graph type and view properties.
+     * 
+     * @param string $type 'pie', 'bar', or 'evolution'
+     * @param array $properties The view properties.
+     * @return Piwik_JqplotDataGenerator
      */
     public static function factory($type, $properties)
     {
-        switch ($type) { // TODO: move to private functions
+        switch ($type) {
             case 'evolution':
                 return new Piwik_JqplotDataGenerator_Evolution($properties);
             case 'pie':
                 $visualization = new Piwik_Visualization_Chart_Pie();
-                $generator = new Piwik_JqplotDataGenerator($visualization, $properties);
-                return $generator;
+                return new Piwik_JqplotDataGenerator($visualization, $properties);
             case 'bar':
                 $visualization = new Piwik_Visualization_Chart_VerticalBar();
-                $generator = new Piwik_JqplotDataGenerator($visualization, $properties);
-                return $generator;
+                return new Piwik_JqplotDataGenerator($visualization, $properties);
             default:
                 throw new Exception("Unknown JqplotDataGenerator type '$type'.");
         }
     }
     
     /**
-     * TODO
+     * Constructor.
+     * 
+     * @param Piwik_Visualization $visualization
+     * @param array $properties
      */
     public function __construct($visualization, $properties)
     {
@@ -55,7 +66,10 @@ class Piwik_JqplotDataGenerator
     }
     
     /**
-     * TODO
+     * Generates JSON graph data and returns it.
+     * 
+     * @param Piwik_DataTable|Piwik_DataTable_Array $dataTable
+     * @return string
      */
     public function generate($dataTable)
     {
