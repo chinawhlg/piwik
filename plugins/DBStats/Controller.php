@@ -316,7 +316,7 @@ class Piwik_DBStats_Controller extends Piwik_Controller_Admin
         $getPrettySize = array('Piwik', 'getPrettySizeFromBytes');
         $params = $fixedMemoryUnit === false ? array() : array($fixedMemoryUnit);
         $view->queueFilter(
-            'ColumnCallbackReplace', array($sizeColumns, $getPrettySize, $params), $runPrettySizeFilterBeforeGeneric);
+            'ColumnCallbackReplace', array($sizeColumns, $getPrettySize, $params));
 
         // jqPlot will display &nbsp; as, well, '&nbsp;', so don't replace the spaces when rendering as a graph
         if (!($view instanceof Piwik_ViewDataTable_GenerateGraphHtml)) {

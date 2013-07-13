@@ -574,7 +574,7 @@ abstract class Piwik_ViewDataTable
             $filterParameters = $filter[1];
             $this->dataTable->filter($filterName, $filterParameters);
         }
-
+        
         if (!$this->areGenericFiltersDisabled()) {
             // Second, generic filters (Sort, Limit, Replace Column Names, etc.)
             $requestString = $this->getRequestString();

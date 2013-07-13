@@ -75,8 +75,8 @@ class Piwik_JqplotDataGenerator
     {
         if (!empty($this->properties['graph_limit'])) {
             $offsetStartSummary = $this->properties['graph_limit'] - 1;
-            $sortColumn = $dataTable->getSortedByColumnName()
-                        ? $dataTable->getSortedByColumnName()
+            $sortColumn = !empty($this->properties['filter_sort_column'])
+                        ? $this->properties['filter_sort_column']
                         : Piwik_Metrics::INDEX_NB_VISITS;
             
             $dataTable->filter(
